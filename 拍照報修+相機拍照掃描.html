@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>大亞奇亞籽獎 - AI機電維修決策平台</title>
+    <style>
+        :root {
+            --bg-body: #0b0f19;
+            --bg-card: #151d30;
+            --bg-nav: #1e293b;
+            --primary: #38bdf8;
+            --primary-dark: #0284c7;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 頂部標題欄 */
+        .app-header {
+            background-color: var(--bg-nav);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .app-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-camera-top {
+            background: #00B900;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        /* 中間主內容區 */
+        .content-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            padding-bottom: 75px;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* UI 卡片風格 */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        .item-row {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .item-row:last-child { border-bottom: none; }
+
+        .btn-action {
+            width: 100%;
+            background: var(--primary-dark);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* 相機彈窗 Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 320px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .viewfinder {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+            animation: scan 1.8s infinite linear;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 95%; }
+            100% { top: 0%; }
+        }
+
+        /* 底部導覽列 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 60px;
+            background-color: var(--bg-nav);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-size: 11px;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .nav-btn .icon { font-size: 18px; }
+        .nav-btn.active { color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部標題 -->
+    <header class="app-header">
+        <div class="app-title">⚡ 大亞 AI 決策平台</div>
+        <button class="btn-camera-top" onclick="openCamera()">📷 拍照報修</button>
+    </header>
+
+    <!-- 可切換的內容區塊 -->
+    <main class="content-container">
+
+        <!-- 頁籤 1: 總覽 -->
+        <div id="tab-overview" class="tab-panel active">
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">監控馬達總數</div>
+                    <div class="stat-num">128 台</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">AI 異常預警</div>
+                    <div class="stat-num" style="color: var(--warning);">2 件</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🚨 即時告警列表</span>
+                    <span class="badge badge-danger">高優先</span>
+                </div>
+                <div class="item-row">
+                    <b>設備：</b>AC-01 螺桿式空壓機<br>
+                    <b>特徵：</b>出口壓力偏低 / 溫度偏高 (85°C)<br>
+                    <b>AI判斷：</b>進氣濾芯堵塞機率 75%
+                </div>
+                <button class="btn-action" onclick="switchTab('tab-ai', document.querySelectorAll('.nav-btn')[1])">查看 AI 診斷處置</button>
+            </div>
+        </div>
+
+        <!-- 頁籤 2: AI 診斷 -->
+        <div id="tab-ai" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🧠 AI 故障原因排序</span>
+                    <span class="badge badge-warning">分析完成</span>
+                </div>
+                <div class="item-row">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>1. 進氣濾芯堵塞</b>
+                        <span style="color:var(--danger); font-weight:bold;">75%</span>
+                    </div>
+                    <div style="color: var(--warning); font-size: 11px; margin-top:2px;">💡 履歷提醒：90天內已第 2 次發生</div>
+                </div>
+                <div class="item-row">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>2. 進氣閥動作不良</b>
+                        <span style="color:var(--warning); font-weight:bold;">18%</span>
+                    </div>
+                </div>
+                <div class="item-row">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>3. 壓縮機效率衰退</b>
+                        <span style="color:var(--text-sub);">7%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title" style="margin-bottom:8px;">🛠️ 黃金排查建議 SOP</div>
+                <div class="item-row">❶ 檢查進氣濾芯壓差指示器</div>
+                <div class="item-row">❷ 聽診進氣管路是否洩漏</div>
+                <div class="item-row">❸ 量測負載電流與出口壓力</div>
+                <button class="btn-action" onclick="alert('已成功自動建立維修工單並通知備品室！')">一鍵派工並調撥備品</button>
+            </div>
+        </div>
+
+        <!-- 頁籤 3: 安全檢核 -->
+        <div id="tab-safety" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🛡️ Safety Rule 自動審核</span>
+                    <span class="badge badge-success">通過</span>
+                </div>
+                <div class="item-row">
+                    ✓ SOC 電量狀態 (28% > 20%) <span class="badge badge-success">PASS</span>
+                </div>
+                <div class="item-row">
+                    ✓ PCS 逆變器狀態無告警 <span class="badge badge-success">PASS</span>
+                </div>
+                <div class="item-row">
+                    ✓ 電池櫃溫度 26°C (正常) <span class="badge badge-success">PASS</span>
+                </div>
+                <div style="margin-top:10px; font-size:11px; color:var(--warning); background:rgba(245,158,11,0.1); padding:8px; border-radius:6px;">
+                    🔒 安全紅線：AI 僅提供唯讀決策，防越權操控 PLC。
+                </div>
+                <button class="btn-action" style="background:var(--success);" onclick="alert('已由主管授權簽核通過！')">👤 主管授權簽核執行</button>
+            </div>
+        </div>
+
+        <!-- 頁籤 4: 系統 -->
+        <div id="tab-settings" class="tab-panel">
+            <div class="card">
+                <div class="card-title">⚙️ 系統設定</div>
+                <div class="item-row"><b>系統版本：</b>v2.4 (2026 奇亞籽獎競賽版)</div>
+                <div class="item-row"><b>連線狀態：</b>SCADA/EMS 即時同步中</div>
+                <div class="item-row"><b>設備節點：</b>A棟 1F 機房 (MCC-01)</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 模擬相機 OCR 彈窗 -->
+    <div id="cameraModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="scanningUI">
+                <div class="viewfinder">
+                    <div class="scan-line"></div>
+                    <div style="font-size: 36px; margin-bottom: 6px;">📷</div>
+                    <div style="font-size: 11px; color: var(--text-sub);">正在對準銘牌進行 OCR 自動辨識...</div>
+                </div>
+            </div>
+
+            <div id="ocrResultUI" style="display: none; text-align: left; font-size: 12px;">
+                <span class="badge badge-success" style="margin-bottom:6px; display:inline-block;">✓ OCR 辨識成功 (99%)</span>
+                <div class="item-row"><b>報修單號：</b>WO-20260915-003</div>
+                <div class="item-row"><b>辨識設備：</b>AC-01 螺桿式空壓機</div>
+                <div class="item-row"><b>設備位置：</b>A棟 1F 機房 (MCC-01)</div>
+                <button class="btn-action" style="background:#00B900;" onclick="submitReport()">確認送出並觸發 AI 診斷</button>
+            </div>
+            
+            <button style="background:none; border:none; color:var(--text-sub); font-size:12px; margin-top:10px; cursor:pointer;" onclick="closeCamera()">取消</button>
+        </div>
+    </div>
+
+    <!-- 底部導覽列 -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('tab-overview', this)">
+            <span class="icon">📊</span>
+            <span>總覽</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('tab-ai', this)">
+            <span class="icon">🧠</span>
+            <span>AI診斷</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('tab-safety', this)">
+            <span class="icon">🛡️</span>
+            <span>安全檢核</span>
+        </button>
+        <button class="nav-btn" onclick="switchTab('tab-settings', this)">
+            <span class="icon">⚙️</span>
+            <span>系統</span>
+        </button>
+    </nav>
+
+    <!-- JS 控制腳本 -->
+    <script>
+        function switchTab(tabId, btnElement) {
+            const panels = document.querySelectorAll('.tab-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+        }
+
+        function openCamera() {
+            document.getElementById('cameraModal').style.display = 'flex';
+            document.getElementById('scanningUI').style.display = 'block';
+            document.getElementById('ocrResultUI').style.display = 'none';
+
+            // 模擬 1.5 秒後辨識完成
+            setTimeout(() => {
+                document.getElementById('scanningUI').style.display = 'none';
+                document.getElementById('ocrResultUI').style.display = 'block';
+            }, 1500);
+        }
+
+        function closeCamera() {
+            document.getElementById('cameraModal').style.display = 'none';
+        }
+
+        function submitReport() {
+            closeCamera();
+            // 自動切換至 AI 診斷頁籤
+            switchTab('tab-ai', document.querySelectorAll('.nav-btn')[1]);
+        }
+    </script>
+</body>
+</html>
