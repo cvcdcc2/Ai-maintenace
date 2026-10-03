@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ 用電安全大冒險 v1.0</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+  background:linear-gradient(135deg,#eaf8ff,#fff8df);
+  color:#17324d;min-height:100vh;
+}
+button{font:inherit;cursor:pointer}
+#app{max-width:1100px;margin:auto;padding:18px}
+header{
+  background:#fff;border-radius:24px;padding:18px 22px;margin-bottom:16px;
+  box-shadow:0 8px 25px #17324d18;display:flex;align-items:center;justify-content:space-between;gap:15px
+}
+.logo{font-size:clamp(22px,4vw,34px);font-weight:900}
+.logo span{color:#f59e0b}
+.stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.stat{background:#f3f8fc;border-radius:14px;padding:9px 13px;font-weight:800}
+#screen{min-height:650px}
+.card{
+ background:#fff;border-radius:28px;padding:28px;box-shadow:0 10px 30px #17324d18
+}
+h1,h2,h3{margin-top:0}
+.hero{text-align:center;padding:50px 25px}
+.hero .bolt{font-size:80px}
+.hero h1{font-size:clamp(34px,7vw,62px);margin:8px 0}
+.hero p{font-size:20px;line-height:1.7}
+.primary{
+ border:0;border-radius:18px;padding:14px 24px;background:#f59e0b;color:#fff;
+ font-weight:900;font-size:18px;box-shadow:0 6px 0 #c77700
+}
+.primary:active{transform:translateY(4px);box-shadow:0 2px 0 #c77700}
+.secondary{
+ border:2px solid #d8e5ee;background:#fff;border-radius:15px;padding:10px 16px;font-weight:800
+}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.level{
+ border:0;border-radius:22px;padding:20px;text-align:left;background:#f7fbfe;
+ min-height:145px;box-shadow:inset 0 0 0 2px #e4eef5;position:relative
+}
+.level:not(.locked):hover{transform:translateY(-2px);box-shadow:0 8px 20px #17324d18}
+.level.locked{opacity:.55;cursor:not-allowed}
+.level.done{background:#effcf3;box-shadow:inset 0 0 0 2px #7ad694}
+.num{font-size:14px;font-weight:900;color:#648098}
+.level-title{font-size:20px;font-weight:900;margin:7px 0}
+.badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:13px;font-weight:900}
+.badge.done{background:#c8f3d2;color:#18723b}.badge.lock{background:#e9eef2}
+.scene{
+ background:#eef7fb;border-radius:22px;padding:22px;margin:18px 0;
+ min-height:260px;display:flex;align-items:center;justify-content:center
+}
+.room{width:min(760px,100%);position:relative;min-height:230px}
+.wall{position:absolute;inset:0 0 40px;background:#fffdf6;border:4px solid #d7e1e7;border-radius:18px}
+.floor{position:absolute;left:0;right:0;bottom:0;height:55px;background:#d9c2a0;border-radius:0 0 18px 18px}
+.object{position:absolute;user-select:none}
+.table{left:12%;bottom:48px;width:34%;height:80px;background:#b77948;border-radius:10px 10px 4px 4px}
+.table:after{content:"";position:absolute;left:12%;right:12%;bottom:-43px;height:45px;border-left:8px solid #7e4c2e;border-right:8px solid #7e4c2e}
+.socket{right:13%;top:62px;width:80px;height:60px;background:#fff;border:4px solid #b7c6cf;border-radius:12px}
+.socket:before,.socket:after{content:"";position:absolute;width:10px;height:24px;background:#344b5e;border-radius:6px;top:14px}
+.socket:before{left:21px}.socket:after{right:21px}
+.ground{position:absolute;left:34px;bottom:6px;width:12px;height:25px;background:#344b5e;border-radius:7px}
+.plug{position:absolute;width:64px;height:55px;background:#fff;border:4px solid #8fa4b2;border-radius:12px}
+.prong{position:absolute;width:8px;height:27px;background:#c9d2d8;top:-25px;border-radius:4px}
+.prong.a{left:14px}.prong.b{right:14px}.prong.g{left:28px;width:8px;border-radius:50%}
+.wire{position:absolute;height:8px;background:#273746;border-radius:10px;transform-origin:left center}
+.hot{outline:5px solid #ff6b4a;animation:pulse .9s infinite alternate;cursor:pointer}
+.safe{outline:4px solid #4caf72;cursor:pointer}
+@keyframes pulse{to{outline-color:#ffb199}}
+.appliance{width:115px;height:95px;background:#e7edf1;border:4px solid #8397a5;border-radius:18px}
+.kettle{right:31%;bottom:52px}.heater{right:8%;bottom:50px}
+.hairdryer{left:12%;bottom:55px;transform:rotate(-12deg)}
+.cloth{width:100px;height:65px;background:#f0a4b8;border-radius:45% 45% 20% 20%;right:5%;bottom:78px}
+.books{width:95px;height:20px;background:#607d8b;right:30%;bottom:150px;box-shadow:0 -22px #d46b6b,0 -44px #6f9dc0}
+.water{width:60px;height:55px;background:#a9dcf5;border:3px solid #5a9abb;border-radius:10px;left:25%;bottom:52px}
+.choice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.choice{
+ border:3px solid #dbe7ee;background:#fff;border-radius:18px;padding:17px;text-align:left;
+ font-weight:800;min-height:74px
+}
+.choice:hover{border-color:#f59e0b;background:#fffaf0}
+.choice.correct{border-color:#35a864;background:#edfff3}
+.choice.wrong{border-color:#ef6c57;background:#fff0ed}
+.feedback{border-radius:18px;padding:16px;margin-top:15px;font-weight:800;line-height:1.6}
+.feedback.good{background:#e8faef;color:#176b38}.feedback.bad{background:#fff0ed;color:#9b3526}
+.progress{height:12px;background:#e7eef3;border-radius:99px;overflow:hidden;margin:12px 0 20px}
+.progress>div{height:100%;background:#f59e0b;width:0;transition:.3s}
+.footer{text-align:center;color:#70869a;padding:20px}
+@media(max-width:760px){
+ .levels{grid-template-columns:1fr 1fr}.choice-grid{grid-template-columns:1fr}
+ .card{padding:18px}.hero{padding:35px 16px}
+}
+@media(max-width:480px){.levels{grid-template-columns:1fr}.stats{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="logo">⚡ 用電安全<span>大冒險</span></div>
+  <div class="stats">
+    <div class="stat">🏆 <span id="score">0</span> 分</div>
+    <div class="stat">❤️ <span id="lives">3</span></div>
+  </div>
+</header>
+<div id="screen"></div>
+<div class="footer">居家用電安全教育遊戲 · v1.0</div>
+</div>
+
+<script>
+const levels=[
+{
+ title:"不超過負載", icon:"🔌",
+ intro:"插座上的電器太多，可能讓電路超過負荷。",
+ question:"哪一個情況最需要立刻改善？",
+ choices:[
+  ["A","一個插座同時接上電熱水壺、電暖器與延長線","correct","高功率電器集中使用，可能造成過載。"],
+  ["B","手機充電器單獨使用插座","safe","單獨使用一般小型充電器，沒有這個場景中的過載問題。"],
+  ["C","電器正常插在牆上插座","safe","這個情況本身沒有顯示過載。"],
+  ["D","關閉電器後拔掉插頭","safe","這是良好的使用習慣。"]
+ ]
+},
+{
+ title:"電線不綑綁折損", icon:"🧵",
+ intro:"電線需要保持自然彎曲，不能被壓住、拉扯或嚴重折彎。",
+ question:"哪一條電線有明顯危險？",
+ choices:[
+  ["A","電線自然垂下","safe","電線沒有被明顯壓住或嚴重折彎。"],
+  ["B","電線被桌腳壓住並急彎","correct","長時間受壓或急彎可能傷害電線外皮與內部導體。"],
+  ["C","電線沿牆邊自然走線","safe","這個情況沒有看到明顯折損。"],
+  ["D","電器關閉後收好電線","safe","妥善收納且不折損是好的習慣。"]
+ ]
+},
+{
+ title:"插頭不潮濕污損", icon:"💧",
+ intro:"水和電很危險！插頭濕了或髒污受損，不要直接使用。",
+ question:"哪個插頭不應該直接插入插座？",
+ choices:[
+  ["A","乾燥、完整的插頭","safe","外觀正常且乾燥。"],
+  ["B","手是乾的，插頭也乾燥","safe","這是較安全的使用條件。"],
+  ["C","插頭沾到水，金屬腳也有污損","correct","潮濕或污損的插頭不應直接使用。"],
+  ["D","插頭外殼完整","safe","單看這個條件沒有顯示危險。"]
+ ]
+},
+{
+ title:"插座不用不插", icon:"🚫",
+ intro:"不要把手指、金屬物或其他物品伸進插座孔。",
+ question:"哪一個行為是危險的？",
+ choices:[
+  ["A","使用完整的插頭正常插入","safe","使用正確插頭是正常方式。"],
+  ["B","用手指碰插座孔","correct","可能接觸帶電部分，具有觸電危險。"],
+  ["C","不用插座時保持空著","safe","不用時不插入物品。"],
+  ["D","發現插座異常就請大人處理","safe","這是正確的安全做法。"]
+ ]
+},
+{
+ title:"電器周圍不放可燃物", icon:"🔥",
+ intro:"會發熱的電器周圍，要留出安全空間，不能拿來烘乾衣物。",
+ question:"冬天使用電暖器時，哪個情況最危險？",
+ choices:[
+  ["A","電暖器周圍保持空曠","safe","保持距離有助於降低可燃物受熱的風險。"],
+  ["B","把衣服掛在電暖器上烘乾","correct","衣物等可燃物太靠近熱源可能起火。"],
+  ["C","使用前清除附近雜物","safe","這是良好的安全習慣。"],
+  ["D","依照說明書保持安全距離","safe","依照產品安全要求使用。"]
+ ]
+},
+{
+ title:"沒有安全標章的電器不用", icon:"🏷️",
+ intro:"購買電器時，要確認產品具有適用的商品安全標識。",
+ question:"哪一項電器應該先停止購買或使用？",
+ choices:[
+  ["A","產品有清楚的商品安全標識與型號資料","safe","有清楚的產品資訊與安全標識。"],
+  ["B","產品資料完整，可查到規格","safe","完整資訊有助於確認產品。"],
+  ["C","吹風機銘牌上沒有商品安全合格標識","correct","沒有必要安全標識的電器，不應直接使用。"],
+  ["D","依照說明書正確使用合格產品","safe","這是安全使用的重要方式。"]
+ ]
+}
+];
+
+let state={screen:"home",score:0,lives:3,unlocked:1,completed:[],current:null,answered:false};
+
+const $=id=>document.getElementById(id);
+function updateStats(){$("score").textContent=state.score;$("lives").textContent=state.lives}
+function save(){localStorage.setItem("safetyGame",JSON.stringify(state))}
+function load(){
+ try{const s=JSON.parse(localStorage.getItem("safetyGame"));if(s){state={...state,...s}}}catch(e){}
+ updateStats()
+}
+function home(){
+ state.screen="home";
+ $("screen").innerHTML=`
+ <div class="card hero">
+   <div class="bolt">⚡</div>
+   <h1>用電安全大冒險</h1>
+   <p>成為小小安全偵探！<br>找出家裡的用電危險，完成 6 個挑戰。</p>
+   <button class="primary" onclick="levels()">開始冒險 🚀</button>
+   <p style="font-size:14px;color:#71879a;margin-top:24px">共 6 關 · 答對 +10 · 答錯 -5 · 3 顆生命</p>
+ </div>`;
+}
+function levels(){
+ state.screen="levels";
+ let html=`<div class="card"><h2>🗺️ 關卡地圖</h2><p>完成前一關，就能解鎖下一關。</p><div class="levels">`;
+ levels.forEach((l,i)=>{
+  const n=i+1, unlocked=n<=state.unlocked, done=state.completed.includes(n);
+  html+=`<button class="level ${unlocked?"":"locked"}" ${unlocked?`onclick="startLevel(${i})`:"disabled"}>
+   <div class="num">第 ${n} 關</div><div style="font-size:30px">${l.icon}</div>
+   <div class="level-title">${l.title}</div>
+   <span class="badge ${done?"done":"lock"}">${done?"✓ 已完成":unlocked?"開始挑戰":"🔒 未解鎖"}</span>
+  </button>`;
+ });
+ html+=`</div><div style="margin-top:20px"><button class="secondary" onclick="home()">← 回首頁</button>
+ <button class="secondary" onclick="resetGame()">重新開始</button></div></div>`;
+ $("screen").innerHTML=html;
+}
+function startLevel(i){
+ state.current=i;state.answered=false;state.screen="game";updateStats();
+ const l=levels[i];
+ $("screen").innerHTML=`
+ <div class="card">
+   <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+    <div><div class="num">第 ${i+1} 關 / 6</div><h2>${l.icon} ${l.title}</h2><p>${l.intro}</p></div>
+    <button class="secondary" onclick="levels()">關卡</button>
+   </div>
+   <div class="progress"><div style="width:${((i)/6)*100}%"></div></div>
+   <div class="scene">${sceneFor(i)}</div>
+   <h3>🕵️ ${l.question}</h3>
+   <div class="choice-grid">${l.choices.map((c,j)=>`
+     <button class="choice" id="c${j}" onclick="answer(${j})">
+       <b>${c[0]}</b>　${c[1]}
+     </button>`).join("")}</div>
+   <div id="feedback"></div>
+ </div>`;
+}
+function sceneFor(i){
+ if(i===0)return `<div class="room"><div class="wall"></div><div class="floor"></div>
+  <div class="table"></div><div class="object appliance kettle"></div><div class="object appliance heater"></div>
+  <div class="socket"></div><div class="wire" style="left:47%;top:120px;width:220px;transform:rotate(12deg)"></div>
+  <div style="position:absolute;left:17%;bottom:145px;font-size:45px">📱</div>
+  <div style="position:absolute;right:38%;bottom:145px;font-size:42px">☕</div></div>`;
+ if(i===1)return `<div class="room"><div class="wall"></div><div class="floor"></div><div class="table"></div>
+  <div class="socket"></div><div class="wire hot" style="left:49%;top:112px;width:210px;transform:rotate(68deg)"></div>
+  <div style="position:absolute;left:25%;bottom:148px;font-size:48px">🪑</div><div style="position:absolute;right:20%;bottom:145px;font-size:45px">💻</div></div>`;
+ if(i===2)return `<div class="room"><div class="wall"></div><div class="floor"></div><div class="socket"></div>
+  <div class="plug hot" style="right:29%;top:126px"><i class="prong a"></i><i class="prong b"></i><i class="prong g"></i></div>
+  <div style="position:absolute;left:18%;bottom:55px;font-size:60px">💧</div><div style="position:absolute;left:33%;bottom:53px;font-size:52px">🧼</div></div>`;
+ if(i===3)return `<div class="room"><div class="wall"></div><div class="floor"></div><div class="socket hot" style="right:36%;top:65px"></div>
+  <div style="position:absolute;right:33%;top:140px;font-size:62px">☝️</div><div style="position:absolute;left:22%;bottom:55px;font-size:58px">🔌</div></div>`;
+ if(i===4)return `<div class="room"><div class="wall"></div><div class="floor"></div><div class="heater appliance hot"></div>
+  <div class="cloth hot"></div><div style="position:absolute;left:17%;bottom:54px;font-size:52px">🪴</div></div>`;
+ return `<div class="room"><div class="wall"></div><div class="floor"></div>
+  <div class="appliance hairdryer hot"></div><div style="position:absolute;left:12%;bottom:130px;font-size:30px;font-weight:900;background:#fff;padding:6px;border-radius:8px">銘牌</div>
+  <div style="position:absolute;right:13%;bottom:58px;font-size:65px">🏷️</div></div>`;
+}
+function answer(j){
+ if(state.answered)return;
+ const c=levels[state.current].choices[j], buttons=document.querySelectorAll(".choice");
+ buttons[j].classList.add(c[2]);
+ state.answered=true;
+ if(c[2]==="correct"){
+   state.score+=10;
+   state.completed=Array.from(new Set([...state.completed,state.current+1]));
+   if(state.unlocked<levels.length && state.unlocked<=state.current+1)state.unlocked=state.current+2;
+   $("feedback").innerHTML=`<div class="feedback good">🎉 答對了！<br>${c[3]}<br><br><button class="primary" onclick="${state.current===5?"finish()":`startLevel(${state.current+1})`}">${state.current===5?"查看結果":"下一關 →"}</button></div>`;
+ }else{
+   state.score=Math.max(0,state.score-5);state.lives--;
+   $("feedback").innerHTML=`<div class="feedback bad">⚠️ 再想一想！<br>${c[3]}<br><br>${state.lives>0?`<button class="primary" onclick="retry()">再挑戰一次</button>`:`<button class="primary" onclick="restartLives()">補充生命並重試</button>`}</div>`;
+ }
+ updateStats();save();
+}
+function retry(){startLevel(state.current)}
+function restartLives(){state.lives=3;updateStats();save();startLevel(state.current)}
+function finish(){
+ state.screen="finish";
+ $("screen").innerHTML=`<div class="card hero">
+  <div class="bolt">🏆</div><h1>安全大達成！</h1>
+  <p>你完成了 6 個用電安全挑戰。</p>
+  <div style="font-size:42px;font-weight:900;margin:20px">⭐ ${state.score} 分</div>
+  <p>完成關卡：${state.completed.length} / 6</p>
+  <button class="primary" onclick="levels()">回到關卡地圖</button>
+ </div>`;
+}
+function resetGame(){if(confirm("確定要重新開始嗎？")){localStorage.removeItem("safetyGame");state={screen:"home",score:0,lives:3,unlocked:1,completed:[],current:null,answered:false};updateStats();home()}}
+load();home();
+</script>
+</body>
+</html>
